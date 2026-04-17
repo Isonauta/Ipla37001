@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formación ISO 37001:2025 — IPLACEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:        #1B2A4A;
+    --navy-deep:   #0F1B32;
+    --navy-mid:    #243558;
+    --gold:        #C49A2A;
+    --gold-light:  #E8B84B;
+    --gold-pale:   #F5E9C8;
+    --cream:       #FAF7F0;
+    --white:       #FFFFFF;
+    --gray-soft:   #8A94A6;
+    --gray-light:  #EEF0F4;
+    --red-alert:   #C0392B;
+    --success:     #1A6B4A;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body:    'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--navy-deep);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  /* ── GATE SCREEN ───────────────────────────────────────── */
+  #gate {
+    position: fixed; inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--navy-deep);
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+
+  #gate.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .gate-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(196,154,42,0.25);
+    border-radius: 4px;
+    padding: 56px 52px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  }
+
+  .gate-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 3px;
+    background: var(--gold);
+    border-radius: 0 0 2px 2px;
+  }
+
+  .gate-logo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0.9;
+  }
+
+  .gate-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .gate-subtitle {
+    font-size: 14px;
+    color: var(--gray-soft);
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  .gate-label {
+    display: block;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 10px;
+  }
+
+  .gate-input-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .gate-input {
+    width: 100%;
+    padding: 14px 48px 14px 18px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 3px;
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .gate-input:focus {
+    border-color: var(--gold);
+    background: rgba(196,154,42,0.06);
+  }
+
+  .toggle-pw {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    cursor: pointer;
+    color: var(--gray-soft);
+    font-size: 18px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .toggle-pw:hover { color: var(--gold-light); }
+
+  .gate-error {
+    font-size: 12px;
+    color: var(--red-alert);
+    min-height: 18px;
+    margin-bottom: 20px;
+    text-align: left;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .gate-error.visible { opacity: 1; }
+
+  .gate-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--gold);
+    color: var(--navy-deep);
+    border: none;
+    border-radius: 3px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .gate-btn:hover { background: var(--gold-light); }
+  .gate-btn:active { transform: scale(0.98); }
+
+  .gate-note {
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--gray-soft);
+    opacity: 0.7;
+  }
+
+  /* ── MAIN CONTENT ──────────────────────────────────────── */
+  #content {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  #content.visible { opacity: 1; }
+
+  /* ── HERO ──────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 40px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 40%, rgba(196,154,42,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 10% 80%, rgba(27,42,74,0.8) 0%, transparent 60%),
+      linear-gradient(160deg, var(--navy-deep) 0%, var(--navy-mid) 50%, var(--navy-deep) 100%);
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(196,154,42,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,154,42,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.2s forwards;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5.5vw, 68px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.35s forwards;
+  }
+
+  .hero-title span {
+    color: var(--gold-light);
+    font-style: italic;
+  }
+
+  .hero-divider {
+    width: 64px; height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 28px 0;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.5s forwards;
+  }
+
+  .hero-desc {
+    font-size: 17px;
+    color: rgba(255,255,255,0.65);
+    max-width: 560px;
+    line-height: 1.75;
+    margin-bottom: 44px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.6s forwards;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.75s forwards;
+  }
+
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .hero-meta-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    opacity: 0;
+    animation: fadeUp 0.7s 1s forwards;
+  }
+
+  .scroll-hint .arrow {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* ── SECTION LAYOUT ────────────────────────────────────── */
+  .section {
+    padding: 80px 40px;
+    position: relative;
+  }
+
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    max-width: 40px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.5vw, 40px);
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 48px;
+  }
+
+  /* ── VIDEO GRID ────────────────────────────────────────── */
+  .videos-section {
+    background: linear-gradient(180deg, var(--navy-deep) 0%, var(--navy-mid) 50%, var(--navy-deep) 100%);
+  }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 32px;
+  }
+
+  .video-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  }
+
+  .video-card:hover {
+    border-color: rgba(196,154,42,0.35);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  }
+
+  .video-embed-wrap {
+    position: relative;
+    padding-bottom: 56.25%;
+    background: var(--navy-deep);
+    overflow: hidden;
+  }
+
+  .video-placeholder {
+    position: absolute; inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: linear-gradient(135deg, var(--navy-deep), var(--navy-mid));
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .video-placeholder:hover { background: linear-gradient(135deg, var(--navy-mid), #2d4268); }
+
+  .play-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(196,154,42,0.15);
+    border: 2px solid rgba(196,154,42,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  .video-placeholder:hover .play-icon {
+    background: rgba(196,154,42,0.25);
+    transform: scale(1.08);
+  }
+
+  .play-icon svg {
+    width: 22px; height: 22px;
+    fill: var(--gold-light);
+    margin-left: 4px;
+  }
+
+  .placeholder-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+  }
+
+  .video-embed-wrap iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+
+  .video-info {
+    padding: 24px 26px 26px;
+  }
+
+  .video-number {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .video-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.35;
+    margin-bottom: 10px;
+  }
+
+  .video-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+
+  .video-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(196,154,42,0.2);
+    color: var(--gold);
+    background: rgba(196,154,42,0.05);
+    white-space: nowrap;
+  }
+
+  /* ── EVALUATION SECTION ────────────────────────────────── */
+  .eval-section {
+    background: var(--navy-deep);
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .eval-card {
+    background: linear-gradient(135deg, rgba(196,154,42,0.08), rgba(196,154,42,0.02));
+    border: 1px solid rgba(196,154,42,0.2);
+    border-radius: 4px;
+    padding: 52px 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .eval-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196,154,42,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .eval-text { flex: 1; min-width: 260px; }
+
+  .eval-icon {
+    font-size: 42px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .eval-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .eval-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  .eval-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    background: var(--gold);
+    color: var(--navy-deep);
+    text-decoration: none;
+    border-radius: 3px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+  }
+
+  .eval-btn:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(196,154,42,0.3);
+  }
+
+  .eval-btn:active { transform: scale(0.98); }
+
+  .eval-btn svg {
+    width: 16px; height: 16px;
+    fill: var(--navy-deep);
+    flex-shrink: 0;
+  }
+
+  .eval-btn-placeholder {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .eval-btn-placeholder:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ── FOOTER ────────────────────────────────────────────── */
+  footer {
+    padding: 36px 40px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .footer-copy {
+    font-size: 12px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ── ANIMATIONS ────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50%       { opacity: 1; }
+  }
+
+  /* ── RESPONSIVE ────────────────────────────────────────── */
+  @media (max-width: 700px) {
+    .hero { padding: 80px 24px 60px; }
+    .section { padding: 60px 24px; }
+    .video-grid { grid-template-columns: 1fr; }
+    .eval-card { padding: 36px 28px; }
+    footer { padding: 28px 24px; }
+    .gate-card { padding: 40px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ GATE ═══════════════════════════════════════════════ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">IPLACEX · Dirección de Cumplimiento Institucional</div>
+    <h1 class="gate-title">Formación<br>ISO 37001:2025</h1>
+    <p class="gate-subtitle">Acceso restringido al personal autorizado.<br>Ingresa tu clave de acceso para continuar.</p>
+    <label class="gate-label" for="pw-input">Clave de acceso</label>
+    <div class="gate-input-wrap">
+      <input
+        type="password"
+        id="pw-input"
+        class="gate-input"
+        placeholder="••••••••••"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="toggle-pw" id="toggle-pw" type="button" title="Mostrar/ocultar clave" aria-label="Mostrar clave">
+        👁
+      </button>
+    </div>
+    <p class="gate-error" id="gate-error">Clave incorrecta. Inténtalo de nuevo.</p>
+    <button class="gate-btn" id="gate-btn">Ingresar al módulo</button>
+    <p class="gate-note">Si no tienes una clave de acceso, comunícate con la Dirección de Cumplimiento Institucional.</p>
+  </div>
+</div>
+
+<!-- ═══ MAIN CONTENT ════════════════════════════════════════ -->
+<div id="content">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-inner">
+      <div class="hero-eyebrow">IPLACEX · Dirección de Cumplimiento Institucional</div>
+      <h1 class="hero-title">
+        Sistema de Gestión<br>
+        <span>Antisoborno</span>
+      </h1>
+      <div class="hero-divider"></div>
+      <p class="hero-desc">
+        Módulo de formación interna sobre los cambios de la norma
+        <strong style="color:rgba(255,255,255,0.85)">ISO 37001:2025</strong>.
+        Cuatro videos para que el equipo de calidad y cumplimiento comprenda,
+        implemente y evidencie los nuevos requisitos.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><span class="dot"></span>4 videos formativos</div>
+        <div class="hero-meta-item"><span class="dot"></span>~35 minutos en total</div>
+        <div class="hero-meta-item"><span class="dot"></span>Evaluación de comprensión</div>
+        <div class="hero-meta-item"><span class="dot"></span>Basado en UNE-ISO 37001:2025</div>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <div class="arrow"></div>
+      <span>Ver videos</span>
+    </div>
+  </section>
+
+  <!-- VIDEOS -->
+  <section class="section videos-section" id="videos">
+    <div class="section-inner">
+      <div class="section-label">Contenido del módulo</div>
+      <h2 class="section-title">Videos de formación</h2>
+
+      <div class="video-grid">
+
+        <!-- VIDEO 1 -->
+        <div class="video-card">
+          <div class="video-embed-wrap" id="wrap-1">
+            <div class="video-placeholder" onclick="loadVideo(1, 'URL_VIDEO_1')">
+              <div class="play-icon">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <span class="placeholder-label">Haz clic para reproducir</span>
+            </div>
+          </div>
+          <div class="video-info">
+            <div class="video-number">Video 01 · 6–8 min</div>
+            <h3 class="video-title">¿Por qué cambió la norma? Contexto y novedades clave de ISO 37001:2025</h3>
+            <p class="video-desc">Historia de la norma, los tres motores del cambio, la nueva Estructura Armonizada y el mapa de cláusulas modificadas.</p>
+            <div class="video-tags">
+              <span class="tag">4.1 Contexto</span>
+              <span class="tag">Estructura HLS</span>
+              <span class="tag">Cambio climático</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO 2 -->
+        <div class="video-card">
+          <div class="video-embed-wrap" id="wrap-2">
+            <div class="video-placeholder" onclick="loadVideo(2, 'URL_VIDEO_2')">
+              <div class="play-icon">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <span class="placeholder-label">Haz clic para reproducir</span>
+            </div>
+          </div>
+          <div class="video-info">
+            <div class="video-number">Video 02 · 7–9 min</div>
+            <h3 class="video-title">Cultura antisoborno: el cambio más profundo de ISO 37001:2025</h3>
+            <p class="video-desc">Definición de cultura antisoborno (3.30), el nuevo requisito 5.1.3, factores del Anexo A.5 y cómo evidenciarla en auditoría.</p>
+            <div class="video-tags">
+              <span class="tag">3.30 Cultura</span>
+              <span class="tag">5.1.3 Liderazgo</span>
+              <span class="tag">Anexo A.5</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO 3 -->
+        <div class="video-card">
+          <div class="video-embed-wrap" id="wrap-3">
+            <div class="video-placeholder" onclick="loadVideo(3, 'URL_VIDEO_3')">
+              <div class="play-icon">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <span class="placeholder-label">Haz clic para reproducir</span>
+            </div>
+          </div>
+          <div class="video-info">
+            <div class="video-number">Video 03 · 8–10 min</div>
+            <h3 class="video-title">Conflictos de interés y debida diligencia: nuevos requisitos operacionales</h3>
+            <p class="video-desc">Nueva definición 3.28, el deber de declarar (7.2.2.1 e), delegación de decisiones (5.3.3) y evidencia documental requerida.</p>
+            <div class="video-tags">
+              <span class="tag">3.28 Conflictos</span>
+              <span class="tag">5.3.3 Delegación</span>
+              <span class="tag">8.2 Due Diligence</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO 4 -->
+        <div class="video-card">
+          <div class="video-embed-wrap" id="wrap-4">
+            <div class="video-placeholder" onclick="loadVideo(4, 'URL_VIDEO_4')">
+              <div class="play-icon">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <span class="placeholder-label">Haz clic para reproducir</span>
+            </div>
+          </div>
+          <div class="video-info">
+            <div class="video-number">Video 04 · 8–10 min</div>
+            <h3 class="video-title">Cómo hacer la transición: brechas, plan de acción y auditoría interna</h3>
+            <p class="video-desc">Análisis de brechas por cláusula, cinco acciones prioritarias, ajustes al programa de auditoría interna y hoja de ruta de transición.</p>
+            <div class="video-tags">
+              <span class="tag">Gap Analysis</span>
+              <span class="tag">9.2 Auditoría</span>
+              <span class="tag">Plan de transición</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- EVALUACIÓN -->
+  <section class="section eval-section" id="evaluacion">
+    <div class="section-inner">
+      <div class="section-label">Cierre del módulo</div>
+      <h2 class="section-title">Evaluación de comprensión</h2>
+
+      <div class="eval-card">
+        <div class="eval-text">
+          <span class="eval-icon">📋</span>
+          <h3 class="eval-title">Evaluación ISO 37001:2025</h3>
+          <p class="eval-desc">
+            Una vez visualizados los cuatro videos, completa la evaluación de comprensión.
+            Permite verificar que los conceptos clave de la nueva versión de la norma han sido
+            asimilados correctamente por el equipo de cumplimiento.
+          </p>
+        </div>
+        <a href="URL_EVALUACION" target="_blank" class="eval-btn eval-btn-placeholder" id="eval-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          Ir a la evaluación
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-logo">IPLACEX · DCIC · 2025</span>
+    <span class="footer-copy">Uso interno exclusivo — Dirección de Cumplimiento Institucional</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── PASSWORD ──────────────────────────────────────────────
+  const PASS = "Ipla37001**";
+
+  const gate     = document.getElementById('gate');
+  const content  = document.getElementById('content');
+  const input    = document.getElementById('pw-input');
+  const btn      = document.getElementById('gate-btn');
+  const errMsg   = document.getElementById('gate-error');
+  const togglePw = document.getElementById('toggle-pw');
+
+  function unlock() {
+    if (input.value === PASS) {
+      gate.classList.add('hidden');
+      content.classList.add('visible');
+      document.body.style.overflow = '';
+    } else {
+      errMsg.classList.add('visible');
+      input.style.borderColor = 'rgba(192,57,43,0.6)';
+      input.focus();
+      setTimeout(() => {
+        errMsg.classList.remove('visible');
+        input.style.borderColor = '';
+      }, 2800);
+    }
+  }
+
+  btn.addEventListener('click', unlock);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+  togglePw.addEventListener('click', () => {
+    if (input.type === 'password') {
+      input.type = 'text';
+      togglePw.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      togglePw.textContent = '👁';
+    }
+  });
+
+  // Block scroll while gate is visible
+  document.body.style.overflow = 'hidden';
+
+  // ── VIDEO LOADER ──────────────────────────────────────────
+  // Converts a YouTube URL to embed format and injects iframe
+  function getEmbedUrl(url) {
+    if (!url || url.startsWith('URL_')) return null;
+    // Handle youtu.be short links
+    let match = url.match(/youtu\.be\/([^?&]+)/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+    // Handle youtube.com/watch?v=
+    match = url.match(/[?&]v=([^&]+)/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+    // Already an embed URL
+    if (url.includes('youtube.com/embed/')) return url + (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
+    return null;
+  }
+
+  function loadVideo(num, url) {
+    const embedUrl = getEmbedUrl(url);
+    const wrap = document.getElementById(`wrap-${num}`);
+    if (!embedUrl) {
+      // Not yet configured — show a friendly message
+      const ph = wrap.querySelector('.video-placeholder');
+      const lbl = ph.querySelector('.placeholder-label');
+      lbl.textContent = 'Enlace de YouTube pendiente';
+      return;
+    }
+    const iframe = document.createElement('iframe');
+    iframe.src = embedUrl;
+    iframe.allowFullscreen = true;
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.title = `Video ${num} — ISO 37001:2025`;
+    wrap.innerHTML = '';
+    wrap.appendChild(iframe);
+  }
+
+  // ── SET LINKS ─────────────────────────────────────────────
+  // Cuando tengas los links de YouTube, reemplaza los valores aquí:
+  const VIDEO_LINKS = {
+    1: 'https://youtu.be/r_zZRzMYsqg',
+    2: 'https://youtu.be/6HrFz163gLU',
+    3: 'https://youtu.be/5Hi27A3rw5k',
+    4: 'https://youtu.be/_Ajwin9qPTY',
+  };
+  const EVAL_LINK = 'https://forms.office.com/r/i00b7xspjv';
+
+  // Actualiza los onclick con los links reales
+  document.querySelectorAll('.video-placeholder').forEach((ph, i) => {
+    const n = i + 1;
+    ph.onclick = () => loadVideo(n, VIDEO_LINKS[n]);
+  });
+
+  // Activa el botón de evaluación si el link está configurado
+  const evalBtn = document.getElementById('eval-btn');
+  if (EVAL_LINK && !EVAL_LINK.startsWith('URL_')) {
+    evalBtn.href = EVAL_LINK;
+    evalBtn.classList.remove('eval-btn-placeholder');
+  }
+</script>
+</body>
+</html>
